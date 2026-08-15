@@ -70,22 +70,47 @@ export async function buildPaymentXdr({
 }: BuildPaymentParams): Promise<string> {
   const account = await server.loadAccount(source);
 
-  const tx = new TransactionBuilder(account, {
-    fee: BASE_FEE,
-    networkPassphrase: NETWORK_PASSPHRASE,
-  })
-    .addOperation(
-      Operation.payment({
+  // If the destination account does not exist yet, a plain payment fails
+  // (op_no_destination). In that case we must use createAccount to fund it
+  // into existence with a starting balance.
+  const destinationExists = await accountExists(destination);
+
+  const operation = destinationExists
+    ? Operation.payment({
         destination,
         asset: Asset.native(),
         amount,
       })
-    )
+    : Operation.createAccount({
+        destination,
+        startingBalance: amount,
+      });
+
+  const tx = new TransactionBuilder(account, {
+    fee: BASE_FEE,
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(operation)
     .setTimeout(180)
     .build();
 
   return tx.toXDR();
 }
+
+/**
+ * Returns true if the account already exists on the network, false if it
+ * has not been created/funded yet.
+ */
+async function accountExists(publicKey: string): Promise<boolean> {
+  try {
+    await server.loadAccount(publicKey);
+    return true;
+  } catch (err: unknown) {
+    if (isNotFound(err)) return false;
+    throw err;
+  }
+}
+
 
 /**
  * Submit a signed transaction (XDR) to the network and return the tx hash.
