@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Stellar Pay — White Belt Testnet dApp
 
-## Getting Started
+A beginner-friendly Stellar dApp built for the **Level 1 – White Belt** challenge.
+Connect a [Freighter](https://www.freighter.app/) wallet, view your XLM balance,
+fund your account from Friendbot, and send XLM payments — all on the **Stellar
+Testnet**.
 
-First, run the development server:
+Built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, and
+**shadcn/ui**, using the official `@stellar/stellar-sdk` and
+`@stellar/freighter-api`.
+
+## Features
+
+- 🔌 **Wallet connection** — connect and disconnect the Freighter wallet
+- 🌐 **Testnet enforced** — verifies Freighter is set to the Stellar Testnet
+- 💰 **Balance display** — fetches and shows the connected account's XLM balance
+- 🚰 **Friendbot funding** — one-click request for 10,000 testnet XLM
+- 💸 **Send payments** — send XLM to any Stellar address with input validation
+- ✅ **Transaction feedback** — clear success/failure states, the transaction
+  hash, and a link to view it on Stellar Expert
+
+## Tech Stack
+
+| Layer      | Choice                                   |
+| ---------- | ---------------------------------------- |
+| Framework  | Next.js (App Router) + React 19          |
+| Language   | TypeScript                               |
+| Styling    | Tailwind CSS v4 + shadcn/ui              |
+| Blockchain | Stellar SDK (Horizon) + Freighter API    |
+| Network    | Stellar Testnet                          |
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) 18.18+ (or 20+)
+- The [Freighter](https://www.freighter.app/) browser extension, set to **Testnet**
+
+## Getting Started (run locally)
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start the dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# 3. Open the app
+# Visit http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then in the app:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Click **Connect Freighter** and approve the connection.
+2. If your account is new, click **Fund with Friendbot** to receive testnet XLM.
+3. Your **XLM balance** is displayed once connected.
+4. Enter a destination address and amount, then click **Send Payment**.
+5. Approve the transaction in Freighter — the app shows the result and tx hash.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Available Scripts
 
-## Learn More
+```bash
+npm run dev     # start the development server
+npm run build   # create a production build
+npm run start   # run the production build
+npm run lint    # run ESLint
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├─ app/
+│  ├─ layout.tsx        # root layout + toast provider
+│  └─ page.tsx          # main UI (wallet card, balance, actions)
+├─ components/
+│  ├─ send-payment.tsx  # payment form + transaction feedback
+│  └─ ui/               # shadcn/ui components
+├─ hooks/
+│  └─ use-wallet.ts     # wallet connect/disconnect + balance state
+└─ lib/
+   ├─ freighter.ts      # Freighter wallet integration
+   └─ stellar.ts        # Horizon queries + transaction building
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Screenshots
 
-## Deploy on Vercel
+> Replace the placeholders below with your own screenshots.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Wallet connected state**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+![Wallet connected](docs/screenshots/wallet-connected.png)
+
+**Balance displayed**
+
+![Balance displayed](docs/screenshots/balance.png)
+
+**Successful testnet transaction / result shown to user**
+
+![Transaction success](docs/screenshots/transaction-success.png)
+
+## Notes
+
+- This app targets the **Stellar Testnet only**. Do not use it with mainnet funds.
+- Testnet data is periodically reset by the Stellar network.
+
+## License
+
+MIT
