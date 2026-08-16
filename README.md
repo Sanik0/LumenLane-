@@ -1,38 +1,63 @@
-# Stellar Pay — White Belt Testnet dApp
+# Stellar Pay — Yellow Belt (Level 2) Testnet dApp
 
-A beginner-friendly Stellar dApp built for the **Level 1 – White Belt** challenge.
-Connect a [Freighter](https://www.freighter.app/) wallet, view your XLM balance,
-fund your account from Friendbot, and send XLM payments — all on the **Stellar
-Testnet**.
+A multi-wallet Stellar dApp built for the **Level 2 – Yellow Belt** challenge.
+Connect any supported wallet, call a **Soroban smart contract** on the Stellar
+Testnet, watch **real-time contract events** stream in, and track transaction
+status from pending → success/failure.
 
 Built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, and
-**shadcn/ui**, using the official `@stellar/stellar-sdk` and
-`@stellar/freighter-api`.
+**shadcn/ui**, using the official `@stellar/stellar-sdk`, the Soroban RPC, and
+**Stellar Wallets Kit** for multi-wallet support.
+
+## Level 2 Requirements → Where they live
+
+| Requirement                         | Implementation                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------ |
+| Multi-wallet integration            | `src/lib/wallet-kit.ts` — Stellar Wallets Kit (Freighter, xBull, Albedo, Rabet, LOBSTR, Hana) |
+| 3+ error types handled              | `src/lib/errors.ts` — `wallet_not_found`, `user_rejected`, `insufficient_balance`, `wrong_network`, `network` |
+| Contract deployed on testnet        | Native XLM **Stellar Asset Contract (SAC)** + optional custom contract in `contracts/` |
+| Contract called from the frontend   | `src/lib/soroban.ts` → `transferViaContract()` / `readContractBalance()`       |
+| Transaction status visible          | `src/components/contract-transfer.tsx` — simulating → signing → submitting → confirming → success/failed |
+| Event listening / state sync        | `src/components/activity-feed.tsx` polls `fetchTransferEvents()` every 8s      |
+
+## Key Addresses & Hashes
+
+- **Deployed contract address (native XLM SAC, Testnet):**
+  `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
+  ([view on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC))
+- **Transaction hash of a contract call:** _paste the hash from a successful
+  `transfer()` call here (the app prints it with a Stellar Expert link)._
 
 ## Features
 
-- 🔌 **Wallet connection** — connect and disconnect the Freighter wallet
-- 🌐 **Testnet enforced** — verifies Freighter is set to the Stellar Testnet
-- 💰 **Balance display** — fetches and shows the connected account's XLM balance
-- 🚰 **Friendbot funding** — one-click request for 10,000 testnet XLM
-- 💸 **Send payments** — send XLM to any Stellar address with input validation
-- ✅ **Transaction feedback** — clear success/failure states, the transaction
-  hash, and a link to view it on Stellar Expert
+- 🔐 **Multi-wallet** — connect Freighter, xBull, Albedo, Rabet, LOBSTR, or Hana
+  via a single modal (Stellar Wallets Kit)
+- 📝 **Smart-contract calls** — invoke `transfer` on the native XLM SAC and read
+  balances via read-only simulation (no fee)
+- 📡 **Real-time events** — a live activity feed streams SAC `transfer` events
+- ⏳ **Transaction status** — clear pending phases and success/failure states
+  with a verifiable Stellar Expert link
+- 🧯 **Robust error handling** — wallet-not-found, user-rejected, and
+  insufficient-balance are all handled with actionable messages
+- 💰 **Balance + Friendbot** — view your balance and fund a new account
 
 ## Tech Stack
 
-| Layer      | Choice                                   |
-| ---------- | ---------------------------------------- |
-| Framework  | Next.js (App Router) + React 19          |
-| Language   | TypeScript                               |
-| Styling    | Tailwind CSS v4 + shadcn/ui              |
-| Blockchain | Stellar SDK (Horizon) + Freighter API    |
-| Network    | Stellar Testnet                          |
+| Layer      | Choice                                        |
+| ---------- | --------------------------------------------- |
+| Framework  | Next.js (App Router) + React 19               |
+| Language   | TypeScript                                    |
+| Styling    | Tailwind CSS v4 + shadcn/ui                   |
+| Wallets    | Stellar Wallets Kit (multi-wallet)            |
+| Blockchain | Stellar SDK (Horizon + Soroban RPC)           |
+| Contract   | Native XLM Stellar Asset Contract (Soroban)   |
+| Network    | Stellar Testnet                               |
 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 18.18+ (or 20+)
-- The [Freighter](https://www.freighter.app/) browser extension, set to **Testnet**
+- A supported Stellar wallet set to **Testnet** (e.g. the
+  [Freighter](https://www.freighter.app/) browser extension)
 
 ## Getting Started (run locally)
 
@@ -49,11 +74,13 @@ npm run dev
 
 Then in the app:
 
-1. Click **Connect Freighter** and approve the connection.
+1. Click **Connect Wallet** and pick your wallet in the modal.
 2. If your account is new, click **Fund with Friendbot** to receive testnet XLM.
-3. Your **XLM balance** is displayed once connected.
-4. Enter a destination address and amount, then click **Send Payment**.
-5. Approve the transaction in Freighter — the app shows the result and tx hash.
+3. Under **Transfer via Smart Contract**, enter a recipient and amount, then
+   click **Call transfer()**. Approve it in your wallet.
+4. Watch the status advance (simulating → signing → submitting → confirming) and
+   see the confirmed tx hash + explorer link.
+5. Watch the **Live Activity Feed** pick up `transfer` events in real time.
 
 ## Available Scripts
 
@@ -69,35 +96,47 @@ npm run lint    # run ESLint
 ```
 src/
 ├─ app/
-│  ├─ layout.tsx        # root layout + toast provider
-│  └─ page.tsx          # main UI (wallet card, balance, actions)
+│  ├─ layout.tsx            # root layout + toast provider
+│  └─ page.tsx              # main UI (wallet, contract call, feed, payment)
 ├─ components/
-│  ├─ send-payment.tsx  # payment form + transaction feedback
-│  └─ ui/               # shadcn/ui components
+│  ├─ contract-transfer.tsx # Soroban contract call + tx status
+│  ├─ activity-feed.tsx     # real-time contract event feed
+│  ├─ send-payment.tsx      # classic Horizon payment
+│  └─ ui/                   # shadcn/ui components
 ├─ hooks/
-│  └─ use-wallet.ts     # wallet connect/disconnect + balance state
+│  └─ use-wallet.ts         # connect/disconnect + balance + sign
 └─ lib/
-   ├─ freighter.ts      # Freighter wallet integration
-   └─ stellar.ts        # Horizon queries + transaction building
+   ├─ wallet-kit.ts         # multi-wallet integration (Stellar Wallets Kit)
+   ├─ soroban.ts            # Soroban contract calls, events, tx status
+   ├─ errors.ts             # error classification (3+ types)
+   ├─ freighter.ts          # legacy Freighter helpers / install URL
+   └─ stellar.ts            # Horizon queries + payment building
+
+contracts/
+└─ activity_log/            # optional custom Soroban contract (Rust) + docs
 ```
 
 ## Screenshots
 
 > Replace the placeholders below with your own screenshots.
 
-**Wallet connected state**
+**Wallet options available (multi-wallet modal)**
 
-![Wallet connected](docs/screenshots/wallet-connected.png)
-![Wallet connected](docs/screenshots/wallet-connected2.png)
+![Wallet options](docs/screenshots/wallet-options.png)
 
-**Balance displayed**
+**Smart-contract call — transaction status**
 
-![Balance displayed](docs/screenshots/balance.png)
+![Transaction status](docs/screenshots/tx-status.png)
 
-**Successful testnet transaction / result shown to user**
+**Live activity feed (contract events)**
 
-![Transaction success](docs/screenshots/transaction-success.png)
-![Transaction success](docs/screenshots/transaction-success2.png)
+![Activity feed](docs/screenshots/activity-feed.png)
+
+## Custom Contract (optional)
+
+A small custom Soroban contract lives in [`contracts/`](contracts/README.md)
+with build, test, deploy, and invoke instructions. The web app uses the native
+XLM SAC by default so it runs without a Rust toolchain.
 
 ## Notes
 
