@@ -88,6 +88,7 @@ src/
 **Wallet connected state**
 
 ![Wallet connected](docs/screenshots/wallet-connected.png)
+![Wallet connected](docs/screenshots/wallet-connected2.png)
 
 **Balance displayed**
 
@@ -96,6 +97,7 @@ src/
 **Successful testnet transaction / result shown to user**
 
 ![Transaction success](docs/screenshots/transaction-success.png)
+![Transaction success](docs/screenshots/transaction-success2.png)
 
 ## Notes
 

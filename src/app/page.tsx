@@ -2,24 +2,102 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  ArrowUp,
+  ArrowDown,
+  ArrowLeftRight,
+  MoreHorizontal,
+  Copy,
+  RefreshCw,
+  Sparkles,
+} from "lucide-react";
 import { useWallet } from "@/hooks/use-wallet";
 import { SendPayment } from "@/components/send-payment";
+import { FeaturesSection } from "@/components/features-section";
+import { AboutSection } from "@/components/about-section";
+import { FaqSection } from "@/components/faq-section";
+import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fundWithFriendbot } from "@/lib/stellar";
 import { FREIGHTER_INSTALL_URL } from "@/lib/freighter";
 
 function shorten(key: string): string {
   return `${key.slice(0, 6)}…${key.slice(-6)}`;
+}
+
+function TopNav({
+  variant,
+  right,
+}: {
+  variant: "landing" | "app";
+  right?: React.ReactNode;
+}) {
+  return (
+    <header className="sticky top-0 z-20 border-b border-white/5 backdrop-blur-md">
+      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-2 font-semibold">
+          <span className="bg-primary/20 text-primary flex size-8 items-center justify-center rounded-lg">
+            <Sparkles className="size-4" />
+          </span>
+          Stellar Pay
+        </div>
+        {variant === "landing" && (
+          <nav className="hidden items-center gap-6 text-sm sm:flex">
+            <a
+              href="#features"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#about"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              About
+            </a>
+            <a
+              href="#faq"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              FAQ
+            </a>
+          </nav>
+        )}
+        {right ?? (
+          <Badge variant="outline" className="border-primary/40 text-primary">
+            Testnet
+          </Badge>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function ActionButton({
+  icon: Icon,
+  label,
+  onClick,
+  disabled,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="group flex flex-col items-center gap-2 disabled:opacity-50"
+    >
+      <span className="flex size-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition-all group-enabled:group-hover:scale-105 group-enabled:group-hover:bg-white/20">
+        <Icon className="size-5" />
+      </span>
+      <span className="text-xs font-medium text-white/80">{label}</span>
+    </button>
+  );
 }
 
 export default function Home() {
@@ -68,33 +146,129 @@ export default function Home() {
     toast.success("Address copied");
   }
 
-  return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-10">
-      <header className="flex flex-col gap-2 text-center">
-        <div className="flex items-center justify-center gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Stellar Pay</h1>
-          <Badge variant="outline">Testnet</Badge>
-        </div>
-        <p className="text-muted-foreground text-sm">
-          Connect Freighter, check your XLM balance, and send payments on the
-          Stellar Testnet.
-        </p>
-      </header>
+  function scrollToSend() {
+    document.getElementById("send")?.scrollIntoView({ behavior: "smooth" });
+  }
 
-      {/* Wallet card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Wallet</CardTitle>
-          <CardDescription>
-            {address
-              ? "Your Freighter wallet is connected."
-              : "Connect your Freighter wallet to get started."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {!address ? (
-            <div className="flex flex-col gap-3">
-              <Button onClick={handleConnect} disabled={connecting}>
+  /* ---------------- Connected: wallet dashboard ---------------- */
+  if (address) {
+    return (
+      <>
+        <TopNav
+          variant="app"
+          right={
+            <Button variant="ghost" size="sm" onClick={disconnect}>
+              Disconnect
+            </Button>
+          }
+        />
+        <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-10">
+          {/* Balance card */}
+          <div className="balance-gradient relative overflow-hidden rounded-3xl p-6 shadow-2xl shadow-indigo-950/40">
+            <div className="pointer-events-none absolute -top-16 -right-10 size-48 rounded-full bg-white/10 blur-2xl" />
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-white/70">
+                Current balance
+              </span>
+              <Badge className="bg-white/15 text-white hover:bg-white/15">
+                XLM
+              </Badge>
+            </div>
+
+            <div className="mt-3 flex items-end gap-2">
+              {loadingBalance ? (
+                <Skeleton className="h-11 w-48 bg-white/20" />
+              ) : (
+                <span className="text-4xl font-bold tracking-tight text-white tabular-nums">
+                  {balance ?? "0"}
+                </span>
+              )}
+              <span className="pb-1 text-lg text-white/60">XLM</span>
+            </div>
+
+            <button
+              onClick={handleCopy}
+              className="mt-2 flex items-center gap-1.5 font-mono text-xs text-white/60 transition-colors hover:text-white"
+              title="Click to copy"
+            >
+              {shorten(address)}
+              <Copy className="size-3" />
+            </button>
+
+            <div className="mt-6 flex justify-between gap-2">
+              <ActionButton icon={ArrowUp} label="Send" onClick={scrollToSend} />
+              <ActionButton icon={ArrowDown} label="Receive" onClick={handleCopy} />
+              <ActionButton
+                icon={ArrowLeftRight}
+                label="Swap"
+                onClick={() => toast.info("Swaps coming soon")}
+              />
+              <ActionButton
+                icon={MoreHorizontal}
+                label="More"
+                onClick={() => toast.info("More options coming soon")}
+              />
+            </div>
+          </div>
+
+          {/* Manage */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => refreshBalance()}
+              disabled={loadingBalance}
+            >
+              <RefreshCw className="size-4" />
+              Refresh
+            </Button>
+            <Button variant="outline" onClick={handleFund} disabled={funding}>
+              {funding ? "Funding…" : "Fund with Friendbot"}
+            </Button>
+          </div>
+
+          {/* Payment form */}
+          <div id="send" className="scroll-mt-20">
+            <SendPayment address={address} onSuccess={() => refreshBalance()} />
+          </div>
+
+          <footer className="text-muted-foreground mt-auto pt-6 text-center text-xs">
+            Built on the Stellar Testnet · Powered by Freighter &amp; Horizon
+          </footer>
+        </main>
+      </>
+    );
+  }
+
+  /* ---------------- Not connected: landing page ---------------- */
+  return (
+    <>
+      <TopNav variant="landing" />
+      <main className="flex w-full flex-col">
+        {/* Hero */}
+        <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-8 px-4 pt-20 pb-10 text-center">
+          <Reveal>
+            <Badge variant="outline" className="border-primary/40 text-primary">
+              Stellar Testnet dApp
+            </Badge>
+          </Reveal>
+          <Reveal delay={80}>
+            <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
+              Move XLM in{" "}
+              <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
+                seconds
+              </span>
+            </h1>
+          </Reveal>
+          <Reveal delay={160}>
+            <p className="text-muted-foreground mx-auto max-w-xl text-lg">
+              A fast, secure, self-custodial wallet interface for the Stellar
+              network. Connect Freighter to check balances and send payments
+              instantly.
+            </p>
+          </Reveal>
+          <Reveal delay={240}>
+            <div className="flex flex-col items-center gap-3">
+              <Button size="lg" onClick={handleConnect} disabled={connecting}>
                 {connecting ? "Connecting…" : "Connect Freighter"}
               </Button>
               <p className="text-muted-foreground text-xs">
@@ -110,69 +284,42 @@ export default function Home() {
                 .
               </p>
             </div>
-          ) : (
-            <>
-              <div className="flex flex-col gap-1">
-                <span className="text-muted-foreground text-xs">Address</span>
-                <button
-                  onClick={handleCopy}
-                  className="w-fit font-mono text-sm underline-offset-4 hover:underline"
-                  title="Click to copy"
-                >
-                  {shorten(address)}
-                </button>
-              </div>
+          </Reveal>
+        </section>
 
-              <Separator />
+        <FeaturesSection />
+        <AboutSection />
+        <FaqSection />
 
-              <div className="flex flex-col gap-1">
-                <span className="text-muted-foreground text-xs">
-                  XLM Balance
-                </span>
-                {loadingBalance ? (
-                  <Skeleton className="h-9 w-40" />
-                ) : (
-                  <span className="text-3xl font-semibold tabular-nums">
-                    {balance ?? "0"}{" "}
-                    <span className="text-muted-foreground text-base font-normal">
-                      XLM
-                    </span>
-                  </span>
-                )}
-              </div>
+        {/* CTA */}
+        <section className="mx-auto w-full max-w-3xl px-4 py-16">
+          <Reveal>
+            <div className="balance-gradient relative overflow-hidden rounded-3xl p-10 text-center shadow-2xl shadow-indigo-950/40">
+              <div className="pointer-events-none absolute -top-16 -right-10 size-48 rounded-full bg-white/10 blur-2xl" />
+              <h2 className="text-2xl font-bold text-white sm:text-3xl">
+                Ready to get started?
+              </h2>
+              <p className="mx-auto mt-3 max-w-md text-white/70">
+                Connect your Freighter wallet and send your first testnet
+                payment in under a minute.
+              </p>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="mt-6"
+                onClick={handleConnect}
+                disabled={connecting}
+              >
+                {connecting ? "Connecting…" : "Connect Freighter"}
+              </Button>
+            </div>
+          </Reveal>
+        </section>
 
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => refreshBalance()}
-                  disabled={loadingBalance}
-                >
-                  Refresh
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleFund}
-                  disabled={funding}
-                >
-                  {funding ? "Funding…" : "Fund with Friendbot"}
-                </Button>
-                <Button variant="ghost" onClick={disconnect}>
-                  Disconnect
-                </Button>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Payment form */}
-      {address && (
-        <SendPayment address={address} onSuccess={() => refreshBalance()} />
-      )}
-
-      <footer className="text-muted-foreground mt-auto pt-6 text-center text-xs">
-        Built on the Stellar Testnet · Powered by Freighter &amp; Horizon
-      </footer>
-    </main>
+        <footer className="text-muted-foreground border-t border-white/5 py-8 text-center text-xs">
+          Built on the Stellar Testnet · Powered by Freighter &amp; Horizon
+        </footer>
+      </main>
+    </>
   );
 }
