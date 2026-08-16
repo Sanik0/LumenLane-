@@ -9,6 +9,8 @@ Built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, and
 **shadcn/ui**, using the official `@stellar/stellar-sdk`, the Soroban RPC, and
 **Stellar Wallets Kit** for multi-wallet support.
 
+**🔗 Live demo:** https://lumenlane.vercel.app/
+
 ## Level 2 Requirements → Where they live
 
 | Requirement                         | Implementation                                                                 |
@@ -25,9 +27,9 @@ Built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, and
 - **Deployed contract address (native XLM SAC, Testnet):**
   `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
   ([view on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC))
+- **Transaction hash of a contract call:**
   `a0129bddac273390a8c66d849038d4b02521f6fab91b2734840a8e8b0eafdaae`
-- **Transaction hash of a contract call:** _paste the hash from a successful
-  `transfer()` call here (the app prints it with a Stellar Expert link)._
+  ([verify on Stellar Expert](https://stellar.expert/explorer/testnet/tx/a0129bddac273390a8c66d849038d4b02521f6fab91b2734840a8e8b0eafdaae))
 
 ## Features
 
@@ -118,8 +120,6 @@ contracts/
 ```
 
 ## Screenshots
-
-> Replace the placeholders below with your own screenshots.
 
 **Wallet options available (multi-wallet modal)**
 
