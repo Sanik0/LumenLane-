@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  connectWallet,
+  openWalletModal,
   getConnectedAddress,
-  assertTestnet,
-} from "@/lib/freighter";
+  disconnectWallet,
+  signXdr,
+} from "@/lib/wallet-kit";
 import { fetchBalance } from "@/lib/stellar";
 
 export interface WalletState {
@@ -23,26 +24,28 @@ export function useWallet() {
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshBalance = useCallback(async (pubKey?: string) => {
-    const key = pubKey ?? address;
-    if (!key) return;
-    setLoadingBalance(true);
-    try {
-      const result = await fetchBalance(key);
-      setBalance(result.xlm);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch balance");
-    } finally {
-      setLoadingBalance(false);
-    }
-  }, [address]);
+  const refreshBalance = useCallback(
+    async (pubKey?: string) => {
+      const key = pubKey ?? address;
+      if (!key) return;
+      setLoadingBalance(true);
+      try {
+        const result = await fetchBalance(key);
+        setBalance(result.xlm);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch balance");
+      } finally {
+        setLoadingBalance(false);
+      }
+    },
+    [address]
+  );
 
   const connect = useCallback(async () => {
     setConnecting(true);
     setError(null);
     try {
-      const pubKey = await connectWallet();
-      await assertTestnet();
+      const pubKey = await openWalletModal();
       setAddress(pubKey);
       await refreshBalance(pubKey);
     } catch (err) {
@@ -53,11 +56,18 @@ export function useWallet() {
     }
   }, [refreshBalance]);
 
-  const disconnect = useCallback(() => {
+  const disconnect = useCallback(async () => {
+    await disconnectWallet();
     setAddress(null);
     setBalance(null);
     setError(null);
   }, []);
+
+  // Sign helper bound to the currently connected address.
+  const sign = useCallback(
+    (xdr: string, addr: string) => signXdr(xdr, addr),
+    []
+  );
 
   // Attempt to silently restore an already-authorized session on mount.
   useEffect(() => {
@@ -84,5 +94,6 @@ export function useWallet() {
     connect,
     disconnect,
     refreshBalance,
+    sign,
   };
 }
