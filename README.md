@@ -25,6 +25,7 @@ Built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, and
 - **Deployed contract address (native XLM SAC, Testnet):**
   `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
   ([view on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC))
+  `a0129bddac273390a8c66d849038d4b02521f6fab91b2734840a8e8b0eafdaae`
 - **Transaction hash of a contract call:** _paste the hash from a successful
   `transfer()` call here (the app prints it with a Stellar Expert link)._
 
