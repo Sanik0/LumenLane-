@@ -13,7 +13,11 @@ import {
 } from "lucide-react";
 import { useWallet } from "@/hooks/use-wallet";
 import { SendPayment } from "@/components/send-payment";
+import { ContractTransfer } from "@/components/contract-transfer";
+import { ActivityFeed } from "@/components/activity-feed";
+import { classifyError } from "@/lib/errors";
 import { FeaturesSection } from "@/components/features-section";
+
 import { AboutSection } from "@/components/about-section";
 import { FaqSection } from "@/components/faq-section";
 import { Reveal } from "@/components/reveal";
@@ -109,6 +113,7 @@ export default function Home() {
     connect,
     disconnect,
     refreshBalance,
+    sign,
   } = useWallet();
   const [funding, setFunding] = useState(false);
 
@@ -117,9 +122,8 @@ export default function Home() {
       await connect();
       toast.success("Wallet connected");
     } catch (err) {
-      toast.error("Connection failed", {
-        description: err instanceof Error ? err.message : "Unknown error",
-      });
+      const appErr = classifyError(err);
+      toast.error(appErr.title, { description: appErr.message });
     }
   }
 
@@ -226,14 +230,29 @@ export default function Home() {
             </Button>
           </div>
 
-          {/* Payment form */}
+          {/* Smart-contract transfer (Soroban) */}
+          <ContractTransfer
+            address={address}
+            sign={sign}
+            onSuccess={() => refreshBalance()}
+          />
+
+          {/* Real-time contract event feed */}
+          <ActivityFeed address={address} />
+
+          {/* Classic Horizon payment form */}
           <div id="send" className="scroll-mt-20">
-            <SendPayment address={address} onSuccess={() => refreshBalance()} />
+            <SendPayment
+              address={address}
+              sign={sign}
+              onSuccess={() => refreshBalance()}
+            />
           </div>
 
           <footer className="text-muted-foreground mt-auto pt-6 text-center text-xs">
-            Built on the Stellar Testnet · Powered by Freighter &amp; Horizon
+            Built on the Stellar Testnet · Multi-wallet via Stellar Wallets Kit
           </footer>
+
         </main>
       </>
     );
@@ -262,17 +281,18 @@ export default function Home() {
           <Reveal delay={160}>
             <p className="text-muted-foreground mx-auto max-w-xl text-lg">
               A fast, secure, self-custodial wallet interface for the Stellar
-              network. Connect Freighter to check balances and send payments
-              instantly.
+              network. Connect any supported wallet — Freighter, xBull, Albedo,
+              Rabet, LOBSTR, or Hana — to check balances, call smart contracts,
+              and send payments instantly.
             </p>
           </Reveal>
           <Reveal delay={240}>
             <div className="flex flex-col items-center gap-3">
               <Button size="lg" onClick={handleConnect} disabled={connecting}>
-                {connecting ? "Connecting…" : "Connect Freighter"}
+                {connecting ? "Connecting…" : "Connect Wallet"}
               </Button>
               <p className="text-muted-foreground text-xs">
-                Don&apos;t have Freighter?{" "}
+                Don&apos;t have a wallet?{" "}
                 <a
                   href={FREIGHTER_INSTALL_URL}
                   target="_blank"
@@ -300,8 +320,8 @@ export default function Home() {
                 Ready to get started?
               </h2>
               <p className="mx-auto mt-3 max-w-md text-white/70">
-                Connect your Freighter wallet and send your first testnet
-                payment in under a minute.
+                Connect your Stellar wallet and make your first testnet contract
+                call in under a minute.
               </p>
               <Button
                 size="lg"
@@ -310,7 +330,7 @@ export default function Home() {
                 onClick={handleConnect}
                 disabled={connecting}
               >
-                {connecting ? "Connecting…" : "Connect Freighter"}
+                {connecting ? "Connecting…" : "Connect Wallet"}
               </Button>
             </div>
           </Reveal>
