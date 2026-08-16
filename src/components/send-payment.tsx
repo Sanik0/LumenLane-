@@ -19,12 +19,14 @@ import {
   explorerTxUrl,
   isValidPublicKey,
 } from "@/lib/stellar";
-import { signWithFreighter } from "@/lib/freighter";
+import { classifyError } from "@/lib/errors";
 
 interface SendPaymentProps {
   address: string;
+  sign: (xdr: string, address: string) => Promise<string>;
   onSuccess?: () => void;
 }
+
 
 type TxStatus =
   | { state: "idle" }
@@ -32,7 +34,7 @@ type TxStatus =
   | { state: "success"; hash: string }
   | { state: "error"; message: string };
 
-export function SendPayment({ address, onSuccess }: SendPaymentProps) {
+export function SendPayment({ address, sign, onSuccess }: SendPaymentProps) {
   const [destination, setDestination] = useState("");
   const [amount, setAmount] = useState("");
   const [status, setStatus] = useState<TxStatus>({ state: "idle" });
@@ -63,7 +65,7 @@ export function SendPayment({ address, onSuccess }: SendPaymentProps) {
         destination: destination.trim(),
         amount,
       });
-      const signed = await signWithFreighter(xdr, address);
+      const signed = await sign(xdr, address);
       const hash = await submitSignedXdr(signed);
 
       setStatus({ state: "success", hash });
@@ -74,10 +76,9 @@ export function SendPayment({ address, onSuccess }: SendPaymentProps) {
       setAmount("");
       onSuccess?.();
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Transaction failed. Try again.";
-      setStatus({ state: "error", message });
-      toast.error("Transaction failed", { description: message });
+      const appErr = classifyError(err);
+      setStatus({ state: "error", message: appErr.message });
+      toast.error(appErr.title, { description: appErr.message });
     }
   }
 
